@@ -8,16 +8,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Component
 public class StandardProductFileParser {
 
-//    private final ProductRepository productRepository;
-//
-//    ///Opted for Constructor injection, instead of @Autowired. Better practice.
-//    public StandardProductFileParser(ProductRepository productRepository) {
-//        this.productRepository = productRepository;
-//    }
+    private final ProductRepository productRepository;
+
+    ///Opted for Constructor injection, instead of @Autowired. Better practice.
+    public StandardProductFileParser(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
     public void parse(Path filePath){
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
@@ -27,12 +28,30 @@ public class StandardProductFileParser {
 
                 /// Since the fields are separted with ";"
                 String[] fields = line.split(";");
-                Product product = new Product(
-                        fields[0], fields[1], fields[2], fields[3],
-                        Double.parseDouble(fields[4]), fields[5],
-                        Double.parseDouble(fields[6]), fields[7]
-                );
-                System.out.println(product);
+
+                if(fields.length == 8){
+
+                    Product product = new Product(
+                            fields[0], // productId
+                            fields[1], // productName
+                            fields[2], // productCategory
+                            fields[3], // productBrand
+                            Double.parseDouble(fields[4]), // quantity
+                            fields[5], // unit
+                            Double.parseDouble(fields[6]), // price
+                            fields[7]  // currency
+                    );
+
+                    ///Saves us from overwriting products unnecessarily
+                    Optional<Product> existing = productRepository.findById(product.getProductId());
+
+                    if (existing.isEmpty() || !existing.get().equals(product)) {
+                        productRepository.save(product);
+                    }
+                }
+                else{
+                    System.out.println("The product you are trying to add is missing data. Please check your CSV file!");
+                }
             }
         } catch (IOException | NumberFormatException e) {
             e.printStackTrace(); // Replace with proper logging later
