@@ -8,10 +8,10 @@ import java.nio.file.Path;
 public class FileParserHandler {
 
     private final StandardProductFileParser standardParser;
-    private final DiscountedProductFileParser discountedParser;
+    private final DiscountProductFileParser discountedParser;
 
 
-    public FileParserHandler(StandardProductFileParser standardParser, DiscountedProductFileParser discountedParser) {
+    public FileParserHandler(StandardProductFileParser standardParser, DiscountProductFileParser discountedParser) {
         this.standardParser = standardParser;
         this.discountedParser = discountedParser;
     }

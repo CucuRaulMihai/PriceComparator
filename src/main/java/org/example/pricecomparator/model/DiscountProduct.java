@@ -1,8 +1,6 @@
 package org.example.pricecomparator.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -10,6 +8,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "discount_products")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -17,10 +16,11 @@ import java.time.LocalDate;
 public class DiscountProduct {
 
     @Id
-    private String productId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(optional = false)
-    private Product product;
+    private StoreProduct storeProduct;
 
     @NotNull
     private LocalDate fromDate;
@@ -29,7 +29,6 @@ public class DiscountProduct {
     private LocalDate toDate;
 
     @NotNull
-    @Min(value = 1)
-    private Integer discount;
-
+    @Min(1)
+    private Integer discount; // in percent
 }

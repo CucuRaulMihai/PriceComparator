@@ -1,62 +1,69 @@
 package org.example.pricecomparator.parser;
 
-import org.example.pricecomparator.model.Product;
-import org.example.pricecomparator.repository.ProductRepository;
+import org.example.pricecomparator.model.AbstractProduct;
+import org.example.pricecomparator.model.StoreProduct;
+import org.example.pricecomparator.repository.AbstractProductRepository;
+import org.example.pricecomparator.repository.StoreProductRepository;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 
 @Component
 public class StandardProductFileParser {
 
-    private final ProductRepository productRepository;
+    private final AbstractProductRepository abstractProductRepository;
+    private final StoreProductRepository storeProductRepository;
 
-    ///Opted for Constructor injection, instead of @Autowired. Better practice.
-    public StandardProductFileParser(ProductRepository productRepository) {
-        this.productRepository = productRepository;
+    public StandardProductFileParser(AbstractProductRepository abstractProductRepository,
+                                     StoreProductRepository storeProductRepository) {
+        this.abstractProductRepository = abstractProductRepository;
+        this.storeProductRepository = storeProductRepository;
     }
 
-    public void parse(Path filePath){
+    public void parse(Path filePath) {
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
             reader.readLine(); // Skip header
+
+            String storeName = extractStoreNameFromFileName(filePath.getFileName().toString());
+
             String line;
             while ((line = reader.readLine()) != null) {
-
-                /// Since the fields are separted with ";"
                 String[] fields = line.split(";");
 
-                if(fields.length == 8){
+                String productId = fields[0];
+                String name = fields[1];
+                String category = fields[2];
 
-                    Product product = new Product(
-                            fields[0], // productId
-                            fields[1], // productName
-                            fields[2], // productCategory
-                            fields[3], // productBrand
-                            Double.parseDouble(fields[4]), // quantity
-                            fields[5], // unit
-                            Double.parseDouble(fields[6]), // price
-                            fields[7]  // currency
-                    );
+                // Create or get AbstractProduct
+                AbstractProduct abstractProduct = abstractProductRepository
+                        .findById(productId)
+                        .orElseGet(() -> abstractProductRepository.save(
+                                new AbstractProduct(productId, name, category)
+                        ));
 
-                    ///Saves us from overwriting products unnecessarily
-                    Optional<Product> existing = productRepository.findById(product.getProductId());
+                // Create StoreProduct (store-specific)
+                StoreProduct storeProduct = new StoreProduct();
+                storeProduct.setAbstractProduct(abstractProduct);
+                storeProduct.setProductBrand(fields[3]);
+                storeProduct.setPackageQuantity(Double.parseDouble(fields[4]));
+                storeProduct.setPackageUnit(fields[5]);
+                storeProduct.setProductPrice(Double.parseDouble(fields[6]));
+                storeProduct.setProductCurrency(fields[7]);
+                storeProduct.setStoreName(storeName);
 
-                    if (existing.isEmpty() || !existing.get().equals(product)) {
-                        productRepository.save(product);
-                    }
-                }
-                else{
-                    System.out.println("The product you are trying to add is missing data. Please check your CSV file!");
-                }
+                storeProductRepository.save(storeProduct);
             }
-        } catch (IOException | NumberFormatException e) {
-            e.printStackTrace(); // Replace with proper logging later
+
+            System.out.println("Parsed and saved standard products from: " + filePath.getFileName());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-
+    private String extractStoreNameFromFileName(String filename) {
+        return filename.split("_")[0].toUpperCase(); //kaufland_2025-05-20.csv = "KAUFLAND"
+    }
 }
+

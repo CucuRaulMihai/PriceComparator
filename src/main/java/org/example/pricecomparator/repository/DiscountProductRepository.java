@@ -4,16 +4,18 @@ import org.example.pricecomparator.model.DiscountProduct;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
 @Repository
-public interface DiscountProductRepository extends JpaRepository<DiscountProduct, String> {
+public interface DiscountProductRepository extends JpaRepository<DiscountProduct, Long> {
 
-    List<DiscountProduct> findByFromDateAfter(LocalDate date);
+    List<DiscountProduct> findByFromDateAfter(LocalDate fromDate);
 
-    List<DiscountProduct> findTopByOrderByDiscountDesc();
+    List<DiscountProduct> findByStoreProductId(Long storeProductId);
 
-    List<DiscountProduct> findByProductProductId(String productId);
+    List<DiscountProduct> findTopByOrderByDiscountDesc(Pageable pageable);
 }

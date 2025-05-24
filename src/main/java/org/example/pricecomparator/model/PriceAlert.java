@@ -22,7 +22,7 @@ public class PriceAlert {
     private Long id;
 
     @ManyToOne(optional = false)
-    private Product product;
+    private StoreProduct storeProduct;
 
     @NotNull
     @DecimalMin(value = "0.01", message = "Target price should be greater than 0!")

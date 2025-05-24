@@ -22,7 +22,7 @@ public class ShoppingListItem {
     private ShoppingList shoppingList;
 
     @ManyToOne(optional = false)
-    private Product product;
+    private StoreProduct product;
 
     private Integer quantity;
 }
