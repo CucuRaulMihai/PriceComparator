@@ -49,4 +49,11 @@ public class PriceAlertService {
                 .filter(alert -> alert.getStoreProduct().getProductPrice() <= alert.getTargetPrice())
                 .toList();
     }
+
+    public void deleteById(Long id) {
+        if (!priceAlertRepository.existsById(id)) {
+            throw new IllegalArgumentException("PriceAlert with ID " + id + " does not exist.");
+        }
+        priceAlertRepository.deleteById(id);
+    }
 }

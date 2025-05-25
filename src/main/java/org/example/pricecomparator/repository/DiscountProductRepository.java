@@ -18,8 +18,10 @@ public interface DiscountProductRepository extends JpaRepository<DiscountProduct
 
     List<DiscountProduct> findByStoreProductId(Long storeProductId);
 
-    List<DiscountProduct> findTopByOrderByDiscountDesc(Pageable pageable);
+    List<DiscountProduct> findAllByOrderByDiscountDesc(Pageable pageable);
 
     Optional<DiscountProduct> findByStoreProductIdAndFromDateAndToDate(Long storeProductId, LocalDate fromDate, LocalDate toDate);
+
+    List<DiscountProduct> findByStoreProductStoreNameIgnoreCase(String storeName);
 
 }

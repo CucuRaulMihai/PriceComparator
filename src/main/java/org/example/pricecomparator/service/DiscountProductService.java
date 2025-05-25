@@ -31,6 +31,10 @@ public class DiscountProductService {
     }
 
     public List<DiscountProduct> getTopDiscounts(int limit) {
-        return discountProductRepository.findTopByOrderByDiscountDesc(PageRequest.of(0, limit));
+        return discountProductRepository.findAllByOrderByDiscountDesc(PageRequest.of(0, limit));
+    }
+
+    public List<DiscountProduct> findByStoreName(String storeName) {
+        return discountProductRepository.findByStoreProductStoreNameIgnoreCase(storeName);
     }
 }
