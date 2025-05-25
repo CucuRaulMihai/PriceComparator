@@ -4,11 +4,13 @@ import org.example.pricecomparator.model.AbstractProduct;
 import org.example.pricecomparator.model.StoreProduct;
 import org.example.pricecomparator.repository.AbstractProductRepository;
 import org.example.pricecomparator.repository.StoreProductRepository;
+import org.example.pricecomparator.utils.UnitNormalizer;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Component
@@ -27,7 +29,9 @@ public class StandardProductFileParser {
         try (BufferedReader reader = Files.newBufferedReader(filePath)) {
             reader.readLine(); // Skip header
 
-            String storeName = extractStoreNameFromFileName(filePath.getFileName().toString());
+            String filename = filePath.getFileName().toString();
+            String storeName = extractStoreNameFromFileName(filename);
+            LocalDate dateAdded = extractDateFromFileName(filename);
 
             String line;
             while ((line = reader.readLine()) != null) {
@@ -38,9 +42,13 @@ public class StandardProductFileParser {
                 String name = fields[1];
                 String category = fields[2];
                 String brand = fields[3];
-                Double quantity = Double.parseDouble(fields[4]);
-                String unit = fields[5];
-                Double price = Double.parseDouble(fields[6]);
+
+                double originalQuantity = Double.parseDouble(fields[4]);
+                String originalUnit = fields[5];
+                double normalizedQuantity = UnitNormalizer.normalizeQuantity(originalQuantity, originalUnit);
+                String normalizedUnit = UnitNormalizer.normalizeUnit(originalUnit);
+
+                double price = Double.parseDouble(fields[6]);
                 String currency = fields[7];
 
                 // Get or create AbstractProduct
@@ -50,13 +58,13 @@ public class StandardProductFileParser {
                                 new AbstractProduct(productId, name, category)
                         ));
 
-                // Check if this store product already exists
+                // Check if this store product already exists (includes price and date)
                 Optional<StoreProduct> existing = storeProductRepository
-                        .findByAbstractProductIdAndStoreNameIgnoreCaseAndProductBrandIgnoreCaseAndPackageQuantityAndPackageUnit(
-                                abstractProduct.getId(), storeName, brand, quantity, unit);
+                        .findByAbstractProductIdAndStoreNameIgnoreCaseAndProductBrandIgnoreCaseAndPackageQuantityAndPackageUnitAndProductPriceAndDateAdded(
+                                abstractProduct.getId(), storeName, brand, normalizedQuantity, normalizedUnit, price, dateAdded);
 
                 if (existing.isPresent()) {
-                    System.out.println("🔁 Skipping duplicate product: " + productId + " at " + storeName);
+                    System.out.println("🔁 Skipping duplicate product: " + productId + " at " + storeName + " on " + dateAdded);
                     continue;
                 }
 
@@ -65,10 +73,11 @@ public class StandardProductFileParser {
                 storeProduct.setAbstractProduct(abstractProduct);
                 storeProduct.setStoreName(storeName);
                 storeProduct.setProductBrand(brand);
-                storeProduct.setPackageQuantity(quantity);
-                storeProduct.setPackageUnit(unit);
+                storeProduct.setPackageQuantity(normalizedQuantity);
+                storeProduct.setPackageUnit(normalizedUnit);
                 storeProduct.setProductPrice(price);
                 storeProduct.setProductCurrency(currency);
+                storeProduct.setDateAdded(dateAdded); // ✅ store the parsed date
 
                 storeProductRepository.save(storeProduct);
             }
@@ -80,7 +89,17 @@ public class StandardProductFileParser {
     }
 
     private String extractStoreNameFromFileName(String filename) {
-        return filename.split("_")[0].toUpperCase(); //kaufland_2025-05-20.csv = "KAUFLAND"
+        return filename.split("_")[0].toUpperCase(); // kaufland_2025-05-20.csv → KAUFLAND
+    }
+
+    private LocalDate extractDateFromFileName(String filename) {
+        try {
+            String[] parts = filename.replace(".csv", "").split("_");
+            return LocalDate.parse(parts[1]); // e.g., kaufland_2025-05-20.csv
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid file name format for date: " + filename);
+        }
     }
 }
+
 

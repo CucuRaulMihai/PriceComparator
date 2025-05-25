@@ -57,4 +57,19 @@ public class ShoppingListService {
     public List<ShoppingListItem> getItemsInList(String listId) {
         return shoppingListItemRepository.findByShoppingListId(listId);
     }
+
+    public void removeItemById(Long itemId) {
+        if (!shoppingListItemRepository.existsById(itemId)) {
+            throw new IllegalArgumentException("Item not found with ID: " + itemId);
+        }
+        shoppingListItemRepository.deleteById(itemId);
+    }
+
+    public void clearList(String listId) {
+        if (!shoppingListRepository.existsById(listId)) {
+            throw new IllegalArgumentException("Shopping list not found: " + listId);
+        }
+        List<ShoppingListItem> items = shoppingListItemRepository.findByShoppingListId(listId);
+        shoppingListItemRepository.deleteAll(items);
+    }
 }

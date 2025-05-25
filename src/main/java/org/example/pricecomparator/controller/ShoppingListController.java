@@ -58,9 +58,33 @@ public class ShoppingListController {
     public ResponseEntity<?> addProductToList(@PathVariable String id,
                                               @RequestParam Long storeProductId,
                                               @RequestParam(defaultValue = "1") int quantity) {
+        if (quantity <= 0) {
+            return ResponseEntity.badRequest().body("❗ Quantity must be a positive number.");
+        }
+
         try {
             shoppingListService.addProductToList(id, storeProductId, quantity);
             return ResponseEntity.ok("✅ Product added to list: " + id);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("❌ " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/items/{itemId}")
+    public ResponseEntity<?> deleteItem(@PathVariable Long itemId) {
+        try {
+            shoppingListService.removeItemById(itemId);
+            return ResponseEntity.ok("🗑️ Item with ID " + itemId + " removed.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("❌ " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}/clear")
+    public ResponseEntity<?> clearList(@PathVariable String id) {
+        try {
+            shoppingListService.clearList(id);
+            return ResponseEntity.ok("🧹 Shopping list '" + id + "' has been cleared.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("❌ " + e.getMessage());
         }

@@ -9,6 +9,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "store_products")
 @NoArgsConstructor
@@ -42,5 +44,16 @@ public class StoreProduct {
 
     @NotBlank
     private String storeName;
+
+    @Transient
+    public double getValuePerUnit() {
+        if (packageQuantity == null || packageQuantity == 0) {
+            return 0.0;
+        }
+        return Math.round((productPrice / packageQuantity) * 100.0) / 100.0;
+    }
+
+    @NotNull
+    private LocalDate dateAdded;
 
 }
