@@ -72,7 +72,7 @@ mvn spring-boot:run
 * `GET /api/shopping-lists` — list all shopping lists
 * `GET /api/shopping-lists/{id}` — view a specific list
 * `GET /api/shopping-lists/{id}/items` — items in a list
-* `POST /api/shopping-lists/create?listId=weekly&name=Weekly%20List` — create new list
+* `POST /api/shopping-lists/create?listId=weekly&name=Weekly` — create new list
 * `POST /api/shopping-lists/{id}/add?storeProductId=X&quantity=Y` — add item
 * `DELETE /api/shopping-lists/items/{itemId}` — remove single item
 * `DELETE /api/shopping-lists/{id}/clear` — remove all items from list
