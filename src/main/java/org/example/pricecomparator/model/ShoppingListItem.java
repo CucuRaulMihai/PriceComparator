@@ -2,6 +2,7 @@ package org.example.pricecomparator.model;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,8 @@ public class ShoppingListItem {
     private ShoppingList shoppingList;
 
     @ManyToOne(optional = false)
-    private StoreProduct product;
+    private StoreProduct storeProduct;
 
+    @NotNull
     private Integer quantity;
 }
