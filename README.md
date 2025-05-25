@@ -64,7 +64,7 @@ mvn spring-boot:run
 * `GET /api/alerts` — get all alerts
 * `GET /api/alerts/store-product/{id}` — alerts for a specific store product
 * `GET /api/alerts/matched` — alerts that matched recent prices
-* `POST /api/alerts/add` — add a new alert (`storeProductId`, `targetPrice`)
+* `POST /api/alerts/create` — add a new alert (`storeProductId`, `targetPrice`)
 * `DELETE /api/alerts/{id}` — delete an alert
 
 ### 🛒 Shopping Lists
