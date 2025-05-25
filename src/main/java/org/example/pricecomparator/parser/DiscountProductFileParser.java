@@ -38,52 +38,65 @@ public class DiscountProductFileParser {
 
             String line;
             while ((line = reader.readLine()) != null) {
+
                 String[] fields = line.split(";");
 
                 String productId = fields[0];
+                String productName = fields[1];
+                String brand = fields[2];
+                Double quantity = Double.parseDouble(fields[3]);
+                String unit = fields[4];
+                String category = fields[5];
+                LocalDate fromDate = LocalDate.parse(fields[6]);
+                LocalDate toDate = LocalDate.parse(fields[7]);
+                Integer discountPercent = (int) Double.parseDouble(fields[8]);
 
-                Optional<AbstractProduct> abstractProductOpt = abstractProductRepository.findById(productId);
-                if (abstractProductOpt.isEmpty()) {
-                    System.out.println("Skipping discount: abstract product not found for ID " + productId);
+                // Create or find abstract product
+                AbstractProduct abstractProduct = abstractProductRepository.findById(productId)
+                        .orElseGet(() -> abstractProductRepository.save(
+                                new AbstractProduct(productId, productName, category)));
+
+                // Find corresponding store product
+                Optional<StoreProduct> storeProductOpt = storeProductRepository
+                        .findByAbstractProductIdAndStoreNameIgnoreCaseAndProductBrandIgnoreCaseAndPackageQuantityAndPackageUnit(
+                                productId, storeName, brand, quantity, unit);
+
+                if (storeProductOpt.isEmpty()) {
+                    System.out.println("⚠️ No matching StoreProduct found for discount: " + productId);
                     continue;
                 }
 
-                // Find the matching StoreProduct
-                List<StoreProduct> candidates = storeProductRepository.findByAbstractProductId(productId);
-                StoreProduct storeProduct = candidates.stream()
-                        .filter(p ->
-                                p.getStoreName().equalsIgnoreCase(storeName) &&
-                                        p.getProductBrand().equalsIgnoreCase(fields[2]) &&
-                                        p.getPackageQuantity().equals(Double.parseDouble(fields[3])) &&
-                                        p.getPackageUnit().equalsIgnoreCase(fields[4])
-                        )
-                        .findFirst()
-                        .orElse(null);
+                StoreProduct storeProduct = storeProductOpt.get();
 
-                if (storeProduct == null) {
-                    System.out.println("Skipping discount: no store product match for ID " + productId);
+                // Check for duplicate discount
+                boolean alreadyExists = discountProductRepository
+                        .findByStoreProductIdAndFromDateAndToDate(
+                                storeProduct.getId(), fromDate, toDate)
+                        .isPresent();
+
+                if (alreadyExists) {
+                    System.out.println("🔁 Duplicate discount skipped: " + productId + " at " + storeName);
                     continue;
                 }
 
-                // Create discount
+                // Save new discount
                 DiscountProduct discount = new DiscountProduct();
                 discount.setStoreProduct(storeProduct);
-                discount.setFromDate(LocalDate.parse(fields[6]));
-                discount.setToDate(LocalDate.parse(fields[7]));
-                discount.setDiscount((int) Double.parseDouble(fields[8]));
+                discount.setFromDate(fromDate);
+                discount.setToDate(toDate);
+                discount.setDiscount(discountPercent);
 
                 discountProductRepository.save(discount);
             }
 
-            System.out.println("Parsed and saved discounts from: " + filePath.getFileName());
-
+            System.out.println("✅ Parsed and saved discount products from: " + filePath.getFileName());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private String extractStoreNameFromFileName(String filename) {
-        return filename.split("_")[0].toUpperCase(); // e.g., kaufland_discount2025-05-20.csv
+        return filename.split("_")[0].toUpperCase(); // kaufland_discount2025-05-20.csv = kaufland
     }
 }
 

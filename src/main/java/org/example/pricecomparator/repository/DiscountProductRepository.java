@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DiscountProductRepository extends JpaRepository<DiscountProduct, Long> {
@@ -18,4 +19,7 @@ public interface DiscountProductRepository extends JpaRepository<DiscountProduct
     List<DiscountProduct> findByStoreProductId(Long storeProductId);
 
     List<DiscountProduct> findTopByOrderByDiscountDesc(Pageable pageable);
+
+    Optional<DiscountProduct> findByStoreProductIdAndFromDateAndToDate(Long storeProductId, LocalDate fromDate, LocalDate toDate);
+
 }
